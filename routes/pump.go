@@ -48,7 +48,7 @@ func PumpRoutes (app *fiber.App) {
         id := c.Params("id")
 		
 		var ingredient models.Ingredient
-		// Delete Ingredients using the Pump first
+		// Delete Ingredients using the Pump before deleting the Pump itself
 		if tx := models.DB.Where("pump_id = ?", id).Delete(&ingredient, id); tx.Error != nil {
             return c.Status(503).SendString(tx.Error.Error())           
         }

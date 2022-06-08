@@ -8,8 +8,8 @@ import (
 	gorm.Model
 	Name string	`gorm:"unique;notNull;"`
 	// TODO unique over two rows
-	MotorPin string	`gorm:"index:,unique,composite:pin;notNull;"`
-	SensorPin string `gorm:"index:,unique,composite:pin;notNull;"`
+	MotorPin uint	`gorm:"index:,unique,composite:pin;notNull;"`
+	SensorPin uint `gorm:"index:,unique,composite:pin;notNull;"`
 	MlPerMinute uint `gorm:"default:48"`
   }
 

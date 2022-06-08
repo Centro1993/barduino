@@ -3,6 +3,7 @@ package main
 import (
 	"barduino/models"
 	"barduino/routes"
+	"barduino/gpio"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2"
 	"fmt"
@@ -27,6 +28,9 @@ func Setup() *fiber.App {
 	routes.PumpRoutes(app)
 
 	models.InitDabase()
+	if err := gpio.InitGPIO(); err != nil {
+		fmt.Println(err.Error())
+	}
 
 	app.Listen(":3000")
 

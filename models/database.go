@@ -19,4 +19,5 @@ func InitDabase() {
 	initPump()
 	initIngredient()
 	initRecipe()
+	initDrink()
 }

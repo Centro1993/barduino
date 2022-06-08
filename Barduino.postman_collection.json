@@ -29,7 +29,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"Name\": \"Orangensaft\",\n    \"MotorPin\": \"D4\",\n    \"SensorPin\": \"A1\"\n}",
+							"raw": "{\n    \"Name\": \"Orangensaft\",\n    \"MotorPin\": 4,\n    \"SensorPin\": 5\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -68,24 +68,13 @@
 						"method": "POST",
 						"header": [],
 						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "Name",
-									"value": "Wodka",
-									"type": "text"
-								},
-								{
-									"key": "MotorPin",
-									"value": "A4",
-									"type": "text"
-								},
-								{
-									"key": "SensorPin",
-									"value": "D3",
-									"type": "text"
+							"mode": "raw",
+							"raw": "{\n    \"Name\": \"Wodka\",\n    \"MotorPin\": 6,\n    \"SensorPin\": 7\n}",
+							"options": {
+								"raw": {
+									"language": "json"
 								}
-							]
+							}
 						},
 						"url": {
 							"raw": "localhost:3000/pump",
@@ -138,7 +127,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"ID\": 2,\n    \"Name\": \"Wasser\",\n    \"MotorPin\": \"A8\"\n}",
+							"raw": "{\n    \"ID\": 2,\n    \"Name\": \"Wasser\",\n    \"MotorPin\": 8\n}",
 							"options": {
 								"raw": {
 									"language": "json"
