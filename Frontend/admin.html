@@ -18,7 +18,7 @@
                 <th>Motorpin</th>
                 <th>Sensorpin</th>
                 <th>-</th>
-                <th>-</th>
+                <th @click="newPump()" class="action new">new</th>
             </tr>
             <template x-for="pump in pumps">
                 <tr>
@@ -26,7 +26,7 @@
                     <td x-text="pump.MotorPin"></td>
                     <td x-text="pump.SensorPin"></td>
                     <td @click="changePump(pump)" class="action edit">edit</td>
-                    <td class="action delete">delete</td>
+                    <td @click="deletePump(pump)" class="action delete">delete</td>
                 </tr>
             </template>
         </table>
@@ -49,20 +49,39 @@
             </tr>
         </table>
     </div>
-    <div class="pump-modal" x-show="pumpModal">
+    <div class="pump-modal" x-show="modal === 'pumpCreateModal'">
         <div class="pump-modal__input">
             <span>Name</span>
             <input type="text" x-model="selectedPump.Name">
         </div>
         <div class="pump-modal__input">
             <span>MotorPin</span>
-            <input type="text" x-model="selectedPump.MotorPin">
+            <input type="number" x-model="selectedPump.MotorPin">
         </div>
         <div class="pump-modal__input">
             <span>SensorPin</span>
-            <input type="text" x-model="selectedPump.SensorPin">
+            <input type="number" x-model="selectedPump.SensorPin">
+        </div>
+        <button class="pump-modal__submit" @click="createPump()">Create</button>
+    </div>
+    <div class="pump-modal" x-show="modal === 'pumpUpdateModal'">
+        <div class="pump-modal__input">
+            <span>Name</span>
+            <input type="text" x-model="selectedPump.Name">
+        </div>
+        <div class="pump-modal__input">
+            <span>MotorPin</span>
+            <input type="number" x-model="selectedPump.MotorPin">
+        </div>
+        <div class="pump-modal__input">
+            <span>SensorPin</span>
+            <input type="number" x-model="selectedPump.SensorPin">
         </div>
         <button class="pump-modal__submit" @click="updatePump()">Update</button>
+    </div>
+    <div class="pump-modal" x-show="modal === 'pumpDeleteModal'">
+        <button class="pump-modal__submit" @click="destroyPump()">Delete</button>
+        <button class="pump-modal__submit" @click="abortDestroyPump()">Abort</button>
     </div>
 </body>
 </html>
@@ -93,13 +112,17 @@
         justify-content: center;
         gap: 10px;
         text-align: center;
+        margin-top: 10px;
     }
     .action {
         cursor: pointer;
         border: 1px solid black;
     }
-    .edit {
+    .new {
         background: green;
+    }
+    .edit {
+        background: orange;
     }
     .delete {
         background: red;
@@ -119,6 +142,17 @@
         display: flex;
         flex-direction: column;
     }
+    .pump-modal--delete {
+        position: absolute;
+        background: white;
+        border: 1px solid black;
+        height: 100px;
+        width: 200px;
+        top: 50px;
+        left: calc(50% - 100px);
+        display: flex;
+        justify-content: space-around;
+    }
     .pump-modal__input {
         margin-top: 20px;
         display: flex;
@@ -134,7 +168,7 @@
     function alpineData() {
         return {
             selection: 'pumps',
-            pumpModal: false,
+            modal: '',
             pumps: {},
             selectedPump: {
                 'Name': '',
@@ -148,9 +182,30 @@
             openRecipes() {
                 this.selection = 'recipes'
             },
+            newPump() {
+                this.selectedPump = {
+                    'Name': '',
+                    'MotorPin': 0,
+                    'SensorPin': 0,
+                    'ID': 0,
+                };
+                this.modal = 'pumpCreateModal'
+            },
             changePump(pump) {
                 this.selectedPump = pump;
-                this.pumpModal = true;
+                this.modal = 'pumpUpdateModal'
+            },
+            deletePump(pump) {
+                this.selectedPump = pump;
+                this.modal = 'pumpDeleteModal';
+            },
+            abortDestroyPump() {
+                this.modal = '';
+            },
+            destroyPump() {
+                return fetch(`http://localhost:3000/pump/${this.selectedPump.ID}`, {
+                    method: 'DELETE',
+                }).then(() => this.fetchData()).then(() => this.modal = '');
             },
             updatePump() {
                 return fetch(`http://localhost:3000/pump`, {
@@ -158,8 +213,27 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: this.selectedPump,
-                });
+                    body: JSON.stringify({
+                        "ID": this.selectedPump.ID,
+                        "Name": this.selectedPump.Name,
+                        "MotorPin": parseInt(this.selectedPump.MotorPin),
+                        "SensorPin": parseInt(this.selectedPump.SensorPin)
+                    }),
+                }).then(() => this.fetchData()).then(() => this.modal = '');
+            },
+            createPump() {
+                return fetch(`http://localhost:3000/pump`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        "ID": this.selectedPump.ID,
+                        "Name": this.selectedPump.Name,
+                        "MotorPin": parseInt(this.selectedPump.MotorPin),
+                        "SensorPin": parseInt(this.selectedPump.SensorPin)
+                    }),
+                }).then(() => this.fetchData()).then(() => this.modal = '');
             },
             fetchData() {
                 this.fetchPumps();
