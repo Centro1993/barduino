@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Menu</title>
+    <script src="//unpkg.com/alpinejs" defer></script>
+</head>
+<body x-data="alpineData()" x-init="fetchData()" x-cloak>
+    <h1>Barduino - Admin</h1>
+    <nav>
+        <h2 :class="selection === 'pumps' ? 'active' : ''" @click="openPumps()">Pumps</h2>
+        <h2 :class="selection === 'recipes' ? 'active' : ''" @click="openRecipes()">Recipes</h2>
+    </nav>
+    <div x-show="selection === 'pumps'">
+        <table>
+            <tr>
+                <th>Name</th>
+                <th>Motorpin</th>
+                <th>Sensorpin</th>
+                <th>-</th>
+                <th>-</th>
+            </tr>
+            <template x-for="pump in pumps">
+                <tr>
+                    <td x-text="pump.Name"></td>
+                    <td x-text="pump.MotorPin"></td>
+                    <td x-text="pump.SensorPin"></td>
+                    <td @click="changePump(pump)" class="action edit">edit</td>
+                    <td class="action delete">delete</td>
+                </tr>
+            </template>
+        </table>
+    </div>
+    <div x-show="selection === 'recipes'">
+        <table>
+            <tr>
+                <th>Name</th>
+                <th>Motorpin</th>
+                <th>Sensorpin</th>
+                <th>-</th>
+                <th>-</th>
+            </tr>
+            <tr>
+                <td>Orangensaft</td>
+                <td>1</td>
+                <td>2</td>
+                <td class="action edit">edit</td>
+                <td class="action delete">delete</td>
+            </tr>
+        </table>
+    </div>
+    <div class="pump-modal" x-show="pumpModal">
+        <div class="pump-modal__input">
+            <span>Name</span>
+            <input type="text" x-model="selectedPump.Name">
+        </div>
+        <div class="pump-modal__input">
+            <span>MotorPin</span>
+            <input type="text" x-model="selectedPump.MotorPin">
+        </div>
+        <div class="pump-modal__input">
+            <span>SensorPin</span>
+            <input type="text" x-model="selectedPump.SensorPin">
+        </div>
+        <button class="pump-modal__submit" @click="updatePump()">Update</button>
+    </div>
+</body>
+</html>
+
+<style>
+    [x-cloak] {
+        display: none;
+    }
+    body {
+        text-align: center;
+    }
+    nav {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+    }
+    h2:hover {
+        color: grey;
+        cursor: pointer;
+    }
+    table {
+        margin: 0 auto;
+
+    }
+    tr {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        justify-content: center;
+        gap: 10px;
+        text-align: center;
+    }
+    .action {
+        cursor: pointer;
+        border: 1px solid black;
+    }
+    .edit {
+        background: green;
+    }
+    .delete {
+        background: red;
+    }
+    .active, .active:hover {
+        color: red;
+    }
+
+    .pump-modal {
+        position: absolute;
+        background: white;
+        border: 1px solid black;
+        height: 200px;
+        width: 400px;
+        top: 50px;
+        left: calc(50% - 200px);
+        display: flex;
+        flex-direction: column;
+    }
+    .pump-modal__input {
+        margin-top: 20px;
+        display: flex;
+        justify-content: space-between;
+        padding: 0 10px;
+    }
+    .pump-modal__submit {
+        margin: 20px 10px;
+    }
+</style>
+
+<script>
+    function alpineData() {
+        return {
+            selection: 'pumps',
+            pumpModal: false,
+            pumps: {},
+            selectedPump: {
+                'Name': '',
+                'MotorPin': 0,
+                'SensorPin': 0,
+                'ID': 0,
+            },
+            openPumps() {
+                this.selection = 'pumps'
+            },
+            openRecipes() {
+                this.selection = 'recipes'
+            },
+            changePump(pump) {
+                this.selectedPump = pump;
+                this.pumpModal = true;
+            },
+            updatePump() {
+                return fetch(`http://localhost:3000/pump`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: this.selectedPump,
+                });
+            },
+            fetchData() {
+                this.fetchPumps();
+            },
+            fetchPumps() {
+                return fetch('http://localhost:3000/pump').then(response => response.json()).then(data => {
+                    this.pumps = data;
+                })
+            },
+            recipes() {
+                return [
+                    {
+                        'Name': 'Orangensaft',
+                        'MotorPin': 1,
+                        'SensorPin': 2,
+                    },
+                    {
+                        'Name': 'Vodka',
+                        'MotorPin': 3,
+                        'SensorPin': 4,
+                    },
+                ]
+            }
+        }
+    }
+</script>
