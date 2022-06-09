@@ -15,12 +15,12 @@ func initRecipe() {
 	DB.AutoMigrate(&Recipe{})
 }
 
-type pumpInstruction struct{
-	pump		Pump
-	timeInMs	uint
+type PumpInstruction struct{
+	Pump		Pump
+	TimeInMs	int64
 }
 
-func (recipe Recipe) ConvertRecipeToPumpInstructions(servingSizeInMl uint) []pumpInstruction {
+func (recipe Recipe) ConvertRecipeToPumpInstructions(servingSizeInMl uint) []PumpInstruction {
 	var partsTotal uint = 0
 
 	for _, ingredients := range recipe.Ingredients {
@@ -29,11 +29,11 @@ func (recipe Recipe) ConvertRecipeToPumpInstructions(servingSizeInMl uint) []pum
 
 	var mlPerPart uint = servingSizeInMl / partsTotal
 
-	var pumpInstructions []pumpInstruction = make([]pumpInstruction, len(recipe.Ingredients))
+	var pumpInstructions []PumpInstruction = make([]PumpInstruction, len(recipe.Ingredients))
 	for i, ingredient := range recipe.Ingredients {
-		pumpInstructions[i] = pumpInstruction{
-			pump: ingredient.Pump,
-			timeInMs: uint(float64(ingredient.Parts) * float64(mlPerPart) / (float64(ingredient.Pump.MlPerMinute) / 60.0 / 10000.0)),
+		pumpInstructions[i] = PumpInstruction{
+			Pump: ingredient.Pump,
+			TimeInMs: int64(float64(ingredient.Parts) * float64(mlPerPart) / (float64(ingredient.Pump.MlPerMinute) / 60.0 / 10000.0)),
 		}
 	}
 

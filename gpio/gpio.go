@@ -1,10 +1,9 @@
 package gpio
 
 import (
+	"barduino/models"
 	"errors"
 	"time"
-
-	"barduino/models"
 
 	"github.com/stianeikeland/go-rpio/v4"
 )
@@ -108,35 +107,64 @@ func computeAverageSensorState(pump *models.Pump) rpio.State {
 	}
 }
 
-func RunPump(pump *models.Pump, timeInMs int64) error {
-	pin := rpio.Pin(pump.MotorPin)
+func RunPump(barkeeper chan models.PumpStatus, pumpInstruction models.PumpInstruction) {
+	pin := rpio.Pin(pumpInstruction.Pump.MotorPin)
 	pin.Output()
 	pin.High()
 	
+	//TODO communicate with barkeeper before each cycle
+	//TODO take delays into account
+	//TODO return progress
 	// Sleep until the next Sensor Check is due or until finished
 	var timeEclipsed int64 = 0
 	startTime := time.Now().UnixMilli()
-	for timeInMs > timeEclipsed {
-		timeRemaining := timeInMs - timeEclipsed
+	for pumpInstruction.TimeInMs > timeEclipsed {
+		timeRemaining := pumpInstruction.TimeInMs - timeEclipsed
 		// Sleep until the next Sensor Check is due
 		if timeRemaining > TIME_BETWEEN_SENSOR_CHECKS_IN_MS {
 			time.Sleep(time.Duration(TIME_BETWEEN_SENSOR_CHECKS_IN_MS * int64(time.Millisecond)))
-			// and perform the sensor check
-			if sensorState := AverageStateCache[pump.SensorPin]; !sensorState{
+			// and either perform the sensor check
+			if sensorState := AverageStateCache[pumpInstruction.Pump.SensorPin]; !sensorState{
 				// if the sensor is low, stop running the pump
 				pin.Low()
-				return errors.New("ingredient is empty")
+				// inform the barkeeper
+				barkeeper <- models.PumpStatus{
+					CurrentlyServing: true,
+					IngredientEmpty: true,
+				}
+				// and wait until the barkeeper says to continue or stop
+				for pumpStatus := range barkeeper {
+					if !pumpStatus.CurrentlyServing {
+						close(barkeeper)
+						return
+					}
+					if !pumpStatus.IngredientEmpty {
+						pin.High()
+						break
+					}
+				}
 			}
 		} else {	// or sleep until the the Pumping is done, whatever is closer
 			time.Sleep(time.Duration(timeRemaining * int64(time.Millisecond)))
 		}
 		// compute remaining time
-		timeEclipsed = timeInMs + startTime - time.Now().UnixMilli()
+		timeEclipsed = pumpInstruction.TimeInMs + startTime - time.Now().UnixMilli()
 	}
 
 	pin.Low()
 
-	return nil
+	barkeeper <- models.PumpStatus{
+		ProgressInPercent: 100,
+		CurrentlyServing: false,
+		IngredientEmpty: false,
+	}
+
+	close(barkeeper)
+}
+
+func StopPump(pump models.Pump) {
+	pin := rpio.Pin(pump.MotorPin)
+	pin.Low()
 }
 
 func CanBeServed (recipe models.Recipe) bool {

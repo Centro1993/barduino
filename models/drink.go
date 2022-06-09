@@ -8,7 +8,13 @@ type Drink struct {
 	gorm.Model
 	Recipe		Recipe	`gorm:"notNull"`
 	RecipeID	int
-	Served		bool	`gorm:"default:false"`
+}
+
+type DrinkStatus struct{
+	ProgressInPercent	uint
+	IngredientEmpty		bool
+	CurrentlyServing	bool
+	Canceled			bool
 }
 
 func initDrink() {

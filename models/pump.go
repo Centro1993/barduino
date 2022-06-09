@@ -13,6 +13,12 @@ import (
 	MlPerMinute uint `gorm:"default:48"`
   }
 
+  type PumpStatus struct {
+	  CurrentlyServing	bool
+	  IngredientEmpty 	bool
+	  ProgressInPercent uint
+  }
+
   func initPump() {
 	// Migrate the schema
 	DB.AutoMigrate(&Pump{})
