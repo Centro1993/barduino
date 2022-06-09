@@ -13,49 +13,29 @@ type Recipe struct {
 func initRecipe() {
 	// Migrate the schema
 	DB.AutoMigrate(&Recipe{})
-
-	// Seed the Recipes
-	// recipes := []Recipe {
-	// 	{
-	// 		Name: "Wodka-O",
-	// 		Ingredients: []Ingredient {
-	// 			{
-	// 				Name: "Wodka",
-	// 			},
-	// 			{
-	// 				Name: "Orangensaft",
-	// 			},
-	// 		},
-	// 	},
-	// }
-
-	// // Create if not found
-	// for _, recipe := range recipes {
-	// 	var existingRecipe Recipe
-	// 	res := db.Where(&Recipe{Name: recipe.Name}).First(&existingRecipe)
-
-	// 	if res.RowsAffected == 0 {
-	// 		db.Create(&recipe)
-	// 	}
-	// }
 }
 
-/*
-// Create
-db.Create(&Recipe{Code: "D42", Price: 100})
-
-// Read
-var recipe Recipe
-db.First(&recipe, 1) // find recipe with integer primary key
-db.First(&recipe, "code = ?", "D42") // find recipe with code D42
-
-// Update - update recipe's price to 200
-db.Model(&recipe).Update("Price", 200)
-// Update - update multiple fields
-db.Model(&recipe).Updates(Recipe{Price: 200, Code: "F42"}) // non-zero fields
-db.Model(&recipe).Updates(map[string]interface{}{"Price": 200, "Code": "F42"})
-
-// Delete - delete recipe
-db.Delete(&recipe, 1)
+type pumpInstruction struct{
+	pump		Pump
+	timeInMs	uint
 }
-*/
+
+func (Recipe) ConvertRecipeToPumpInstructions(recipe *Recipe, servingSizeInMl uint) []pumpInstruction {
+	var partsTotal uint = 0
+
+	for _, ingredients := range recipe.Ingredients {
+		partsTotal += ingredients.Parts
+	}
+
+	var mlPerPart uint = servingSizeInMl / partsTotal
+
+	var pumpInstructions []pumpInstruction = make([]pumpInstruction, len(recipe.Ingredients))
+	for i, ingredient := range recipe.Ingredients {
+		pumpInstructions[i] = pumpInstruction{
+			pump: ingredient.Pump,
+			timeInMs: uint(float64(ingredient.Parts) * float64(mlPerPart) / (float64(ingredient.Pump.MlPerMinute) / 60.0 / 10000.0)),
+		}
+	}
+
+	return pumpInstructions
+}

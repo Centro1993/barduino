@@ -315,6 +315,19 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "Drink",
+			"item": [
+				{
+					"name": "Create Drink",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
 		}
 	]
 }

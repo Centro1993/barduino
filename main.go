@@ -26,6 +26,8 @@ func Setup() *fiber.App {
 
 	routes.RecipeRoutes(app)
 	routes.PumpRoutes(app)
+	routes.DrinkRoutes(app)
+	routes.StateRoutes(app)
 
 	models.InitDabase()
 	if err := gpio.InitGPIO(); err != nil {

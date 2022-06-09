@@ -7,7 +7,8 @@ import (
 type Drink struct {
 	gorm.Model
 	Recipe		Recipe	`gorm:"notNull"`
-	Served	bool		`gorm:"default:false"`
+	RecipeID	int
+	Served		bool	`gorm:"default:false"`
 }
 
 func initDrink() {

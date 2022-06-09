@@ -5,6 +5,7 @@ import (
     "github.com/gofiber/fiber/v2"
     "barduino/models"
 	"barduino/gpio"
+	"barduino/logic"
 )
 
 func StateRoutes (app *fiber.App) {
@@ -27,6 +28,8 @@ func StateRoutes (app *fiber.App) {
 
 	// Get the state of the current drink
     app.Get("/state/drink", func(c *fiber.Ctx) error {
-		// TODO
+		//TODO 
+		drinkStatus := logic.DrinkStatus{ProgressInPercent: 40, Served: false, Canceled: false, Interrupted:  false}
+		return c.Status(200).JSON(drinkStatus)
 	})
 }

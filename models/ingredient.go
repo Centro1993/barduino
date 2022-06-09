@@ -9,7 +9,7 @@ import (
 	Pump		Pump
 	PumpID		int
 	RecipeID	int
-	Parts 		uint16	`gorm:"notNull;"`
+	Parts 		uint	`gorm:"notNull;"`
   }
 
   func initIngredient() {
