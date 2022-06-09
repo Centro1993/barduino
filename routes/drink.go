@@ -1,8 +1,10 @@
 package routes
 
 import (
-	"github.com/gofiber/fiber/v2"
+	"barduino/gpio"
 	"barduino/models"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 func DrinkRoutes (app *fiber.App) {
@@ -17,9 +19,12 @@ func DrinkRoutes (app *fiber.App) {
 			return c.Status(503).SendString(tx.Error.Error())
 		}
 
-        // calculate recipe serving sizes
-
         // dont create drinks on empty pumps
+		if !gpio.CanBeServed(drink.Recipe) {
+			c.Status(404)
+		}
+
+		// Start Pouring
 
 		return c.Status(201).JSON(drink)
 	})

@@ -16,7 +16,9 @@ const TIME_BETWEEN_SENSOR_CHECKS_IN_MS int64 = 100
 const AMOUNT_OF_SENSOR_STATES_SAVED int = 10
 
 // Access this to get the rolling average of the last few states of a Sensor
+// key is the pump id for both maps
 var AverageStateCache map[uint]bool
+// This is used to save the last n sensor states internally
 var sensorStateHistory map[uint][]rpio.State
 
 func InitGPIO() error {
@@ -42,8 +44,10 @@ func checkSensors() {
 		models.DB.Find(&pumps)
 
 		for _, pump := range pumps {
-			// create slice if it does not exist yet
+			// create stateHistory and pull down the resistor if the sensor has not been used yet
 			if len(sensorStateHistory[pump.SensorPin]) == 0 {
+				pin := rpio.Pin(pump.SensorPin)
+				pin.PullDown()
 				sensorStateHistory[pump.SensorPin] = make([]rpio.State, AMOUNT_OF_SENSOR_STATES_SAVED)
 			}
 			// read and append new state
@@ -55,7 +59,6 @@ func checkSensors() {
 				AverageStateCache[pump.SensorPin] = true
 			} else {
 				AverageStateCache[pump.SensorPin] = false
-
 			}
 			
 		}
@@ -72,6 +75,9 @@ func checkSensors() {
 			if !pumpFound {
 				delete(sensorStateHistory, key)
 				delete(AverageStateCache, key)
+				// reset sensor pin resistor
+				pin := rpio.Pin(key)
+				pin.PullOff()
 			}
 		}
 		// check sleep repeat
@@ -131,4 +137,13 @@ func RunPump(pump *models.Pump, timeInMs int64) error {
 	pin.Low()
 
 	return nil
+}
+
+func CanBeServed (recipe models.Recipe) bool {
+	for _, ingredient := range recipe.Ingredients {
+		if !AverageStateCache[ingredient.Pump.SensorPin] {
+			return false
+		}
+	}
+	return true
 }

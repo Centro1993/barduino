@@ -20,7 +20,7 @@ type pumpInstruction struct{
 	timeInMs	uint
 }
 
-func (Recipe) ConvertRecipeToPumpInstructions(recipe *Recipe, servingSizeInMl uint) []pumpInstruction {
+func (recipe Recipe) ConvertRecipeToPumpInstructions(servingSizeInMl uint) []pumpInstruction {
 	var partsTotal uint = 0
 
 	for _, ingredients := range recipe.Ingredients {
