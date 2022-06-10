@@ -11,10 +11,8 @@ type Drink struct {
 }
 
 type DrinkStatus struct{
-	ProgressInPercent	uint
 	IngredientEmpty		bool
 	CurrentlyServing	bool
-	Canceled			bool
 }
 
 func initDrink() {

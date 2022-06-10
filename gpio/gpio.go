@@ -110,61 +110,115 @@ func computeAverageSensorState(pump *models.Pump) rpio.State {
 func RunPump(barkeeper chan models.PumpStatus, pumpInstruction models.PumpInstruction) {
 	pin := rpio.Pin(pumpInstruction.Pump.MotorPin)
 	pin.Output()
-	pin.High()
 	
-	//TODO communicate with barkeeper before each cycle
-	//TODO take delays into account
-	//TODO return progress
-	// Sleep until the next Sensor Check is due or until finished
-	var timeEclipsed int64 = 0
-	startTime := time.Now().UnixMilli()
-	for pumpInstruction.TimeInMs > timeEclipsed {
-		timeRemaining := pumpInstruction.TimeInMs - timeEclipsed
-		// Sleep until the next Sensor Check is due
-		if timeRemaining > TIME_BETWEEN_SENSOR_CHECKS_IN_MS {
+	lastPumpStartTime := time.Now().UnixMilli()
+	
+	/* 	This is a BIDIRECTIONAL communication Loop
+		Therefore, we have to send a message before we await an answer
+		Else, we will enter a deadlock
+	*/
+	for pumpStatus := range barkeeper { 
+		
+		// cancel the drink if the barkeeper demands it
+		if !pumpStatus.CurrentlyServing {
+			pin.Low()
+			barkeeper <- models.PumpStatus{
+				CurrentlyServing: false,
+				IngredientEmpty: false,
+			}
+			close(barkeeper)
+			return
+		}
+
+		// pause the execution if another pump ran dry
+		if pumpStatus.IngredientEmpty {
+			pin.Low()
+			// compute remaining time
+			currentTime := time.Now().UnixMilli()
+			pumpInstruction.TimeInMs -= (currentTime - lastPumpStartTime)
+			// and assume the pump starts after this loop, so set the lastStartTime for the next remaining time computation
+			lastPumpStartTime = currentTime
+			// wait a while and check in with the barkeeper again
 			time.Sleep(time.Duration(TIME_BETWEEN_SENSOR_CHECKS_IN_MS * int64(time.Millisecond)))
-			// and either perform the sensor check
-			if sensorState := AverageStateCache[pumpInstruction.Pump.SensorPin]; !sensorState{
+			barkeeper <- models.PumpStatus{
+				CurrentlyServing: false,
+				IngredientEmpty: false,
+			}
+			continue
+		}
+
+		// compute remaining time
+		currentTime := time.Now().UnixMilli()
+		pumpInstruction.TimeInMs -= (currentTime - lastPumpStartTime)
+
+		// stop the execution if the pumping is done
+		if pumpInstruction.TimeInMs <= 0 {
+			break
+		}
+
+		// start the pump / keep it running
+		lastPumpStartTime = time.Now().UnixMilli()
+		pin.High()
+
+		// If pumping the rest takes longer than until the next sensor check, wait until the next check
+		if pumpInstruction.TimeInMs > TIME_BETWEEN_SENSOR_CHECKS_IN_MS {
+			time.Sleep(time.Duration(TIME_BETWEEN_SENSOR_CHECKS_IN_MS * int64(time.Millisecond)))
+			// and perform the sensor check
+			if !AverageStateCache[pumpInstruction.Pump.SensorPin] {
 				// if the sensor is low, stop running the pump
 				pin.Low()
+
+				// compute remaining time
+				currentTime := time.Now().UnixMilli()
+				pumpInstruction.TimeInMs -= (currentTime - lastPumpStartTime)
+
 				// inform the barkeeper
 				barkeeper <- models.PumpStatus{
 					CurrentlyServing: true,
 					IngredientEmpty: true,
 				}
-				// and wait until the barkeeper says to continue or stop
+
+				// and continously check the sensors 
 				for pumpStatus := range barkeeper {
+					// stop if the barkeeper tells the pump to stop
 					if !pumpStatus.CurrentlyServing {
 						close(barkeeper)
 						return
 					}
-					if !pumpStatus.IngredientEmpty {
-						pin.High()
+					// else if the ingredient has been refilled
+					if AverageStateCache[pumpInstruction.Pump.SensorPin] {
+						// the pump starts up again, so set the lastStartTime for the next remaining time computation
+						lastPumpStartTime = time.Now().UnixMilli()
+						// and wait for the barkeeper to tell the pump to start up again
 						break
 					}
+					// tell the barkeeper that we are still missing our ingredient
+					barkeeper <- models.PumpStatus{
+						CurrentlyServing: false,
+						IngredientEmpty: true,
+					}
+					// wait until the next sensor check
+					time.Sleep(time.Duration(TIME_BETWEEN_SENSOR_CHECKS_IN_MS * int64(time.Millisecond)))
 				}
 			}
-		} else {	// or sleep until the the Pumping is done, whatever is closer
-			time.Sleep(time.Duration(timeRemaining * int64(time.Millisecond)))
+		} else {	// else, sleep until the the Pumping is done, whatever is closer
+			time.Sleep(time.Duration(pumpInstruction.TimeInMs * int64(time.Millisecond)))
 		}
-		// compute remaining time
-		timeEclipsed = pumpInstruction.TimeInMs + startTime - time.Now().UnixMilli()
+		// check in with the barkeeper and start the next loop
+		barkeeper <- models.PumpStatus{
+			CurrentlyServing: true,
+			IngredientEmpty: false,
+		}
 	}
 
 	pin.Low()
 
 	barkeeper <- models.PumpStatus{
-		ProgressInPercent: 100,
 		CurrentlyServing: false,
 		IngredientEmpty: false,
 	}
 
 	close(barkeeper)
-}
-
-func StopPump(pump models.Pump) {
-	pin := rpio.Pin(pump.MotorPin)
-	pin.Low()
 }
 
 func CanBeServed (recipe models.Recipe) bool {
