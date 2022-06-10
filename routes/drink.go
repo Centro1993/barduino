@@ -15,9 +15,13 @@ func DrinkRoutes (app *fiber.App) {
 			return c.Status(503).SendString(err.Error())
 		}
 		
-		if tx := models.DB.Omit("Recipe").Omit("Served").Create(&drink); tx.Error != nil {
+		if tx := models.DB.Omit("Recipe").Create(&drink); tx.Error != nil {
 			return c.Status(503).SendString(tx.Error.Error())
 		}
+
+		if tx := models.DB.Where("ID = ?", drink.ID).Preload("Recipe").Preload("Recipe.Ingredients").Preload("Recipe.Ingredients.Pump").Find(&drink,); tx.Error != nil {
+            return c.Status(503).SendString(tx.Error.Error())
+        }
 
 		// Start Pouring
 		if err := logic.PourDrink(*drink); err != nil {
