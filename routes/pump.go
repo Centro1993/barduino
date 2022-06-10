@@ -49,12 +49,12 @@ func PumpRoutes (app *fiber.App) {
 		
 		var ingredient models.Ingredient
 		// Delete Ingredients using the Pump before deleting the Pump itself
-		if tx := models.DB.Where("pump_id = ?", id).Delete(&ingredient, id); tx.Error != nil {
+		if tx := models.DB.Where("pump_id = ?", id).Unscoped().Delete(&ingredient, id); tx.Error != nil {
             return c.Status(503).SendString(tx.Error.Error())           
         }
 
         var pump models.Pump
-        tx := models.DB.Select("Ingredient").Delete(&pump, id)
+        tx := models.DB.Select("Ingredient").Unscoped().Delete(&pump, id)
 
         if tx.Error != nil {
             return c.Status(503).SendString(tx.Error.Error())           

@@ -48,7 +48,7 @@ func RecipeRoutes (app *fiber.App) {
         id := c.Params("id")
         var recipe models.Recipe
     
-        tx := models.DB.Select("Ingredients").Delete(&recipe, id)
+        tx := models.DB.Select("Ingredients").Unscoped().Delete(&recipe, id)
 
         if tx.Error != nil {
             return c.Status(503).SendString(tx.Error.Error())           
