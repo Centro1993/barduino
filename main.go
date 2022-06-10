@@ -27,9 +27,7 @@ func Setup() *fiber.App {
 		AllowHeaders:  "*",
 	}))
 	
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("<h3>BARDUINO</h3>")
-	})
+	app.Static("/", "./Frontend")
 
 	routes.RecipeRoutes(app)
 	routes.PumpRoutes(app)
