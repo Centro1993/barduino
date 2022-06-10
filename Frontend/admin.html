@@ -45,6 +45,7 @@
         </div>
         <div class="modal__input">
             <span>Ingredient</span>
+            <span>MotorPin</span>
             <input type="number" x-model="selectedPump.MotorPin">
         </div>
         <div class="modal__input">
@@ -89,12 +90,14 @@
         <table>
             <tr class="recipe-tr">
                 <th>Name</th>
+                <th>PumpIDs</th>
                 <th>-</th>
                 <th @click="createRecipeModal()" class="action new">new</th>
             </tr>
             <template x-for="recipe in recipes">
                 <tr class="recipe-tr">
                     <td x-text="recipe.Name"></td>
+                    <td x-text="selectedRecipePumpIDs(recipe)"></td>
                     <td @click="updateRecipeModal(recipe)" class="action edit">edit</td>
                     <td @click="deleteRecipeModal(recipe)" class="action delete">delete</td>
                 </tr>
@@ -184,7 +187,7 @@
     }
     .recipe-tr {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(4, 1fr);
         justify-content: center;
         gap: 10px;
         text-align: center;
@@ -278,6 +281,7 @@
                         "ID": this.selectedPump.ID,
                         "Name": this.selectedPump.Name,
                         "MotorPin": parseInt(this.selectedPump.MotorPin),
+                        "MlPerMinute": parseInt(this.selectedPump.MlPerMinute),
                         "SensorPin": parseInt(this.selectedPump.SensorPin)
                     }),
                 }).then(() => this.fetchData()).then(() => this.modal = '');
@@ -397,6 +401,10 @@
                   "PumpID": 0,
                   "Parts": 0
               })
+            },
+
+            selectedRecipePumpIDs(recipe) {
+              return recipe.Ingredients.map(ingredient => ingredient.PumpID);
             },
 
             // ------------------ INIT ---------------------------------------------
