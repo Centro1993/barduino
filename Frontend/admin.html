@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Menu</title>
+    <script src="//unpkg.com/alpinejs" defer></script>
+</head>
+<body x-data="alpineData()" x-init="fetchData()" x-cloak>
+    <h1>Barduino - Admin</h1>
+
+    <nav>
+        <h2 :class="component === 'pumps' ? 'active' : ''" @click="openPumps()">Pumps</h2>
+        <h2 :class="component === 'recipes' ? 'active' : ''" @click="openRecipes()">Recipes</h2>
+    </nav>
+
+<!--    ------------------------------ PUMPS ------------------------------------------ -->
+
+    <div x-show="component === 'pumps'">
+        <table>
+            <tr class="pump-tr">
+                <th>Name</th>
+                <th>Motorpin</th>
+                <th>Sensorpin</th>
+                <th>MlPerMinute</th>
+                <th>-</th>
+                <th @click="createPumpModal()" class="action new">new</th>
+            </tr>
+            <template x-for="pump in pumps">
+                <tr class="pump-tr">
+                    <td x-text="pump.Name"></td>
+                    <td x-text="pump.MotorPin"></td>
+                    <td x-text="pump.SensorPin"></td>
+                    <td x-text="pump.MlPerMinute"></td>
+                    <td @click="updatePumpModal(pump)" class="action edit">edit</td>
+                    <td @click="deletePumpModal(pump)" class="action delete">delete</td>
+                </tr>
+            </template>
+        </table>
+    </div>
+
+    <div class="modal" x-show="modal === 'createPumpModal'">
+        <div class="modal__input">
+            <span>Name</span>
+            <input type="text" x-model="selectedPump.Name">
+        </div>
+        <div class="modal__input">
+            <span>Ingredient</span>
+            <input type="number" x-model="selectedPump.MotorPin">
+        </div>
+        <div class="modal__input">
+            <span>SensorPin</span>
+            <input type="number" x-model="selectedPump.SensorPin">
+        </div>
+        <div class="modal__input">
+            <span>MlPerMinute</span>
+            <input type="number" x-model="selectedPump.MlPerMinute">
+        </div>
+        <button class="modal__submit" @click="createPump()">Create</button>
+    </div>
+
+    <div class="modal" x-show="modal === 'updatePumpModal'">
+        <div class="modal__input">
+            <span>Name</span>
+            <input type="text" x-model="selectedPump.Name">
+        </div>
+        <div class="modal__input">
+            <span>MotorPin</span>
+            <input type="number" x-model="selectedPump.MotorPin">
+        </div>
+        <div class="modal__input">
+            <span>SensorPin</span>
+            <input type="number" x-model="selectedPump.SensorPin">
+        </div>
+        <div class="modal__input">
+            <span>MlPerMinute</span>
+            <input type="number" x-model="selectedPump.MlPerMinute">
+        </div>
+        <button class="modal__submit" @click="updatePump()">Update</button>
+    </div>
+
+    <div class="modal" x-show="modal === 'deletePumpModal'">
+        <button class="modal__submit" @click="deletePump()">Delete</button>
+        <button class="modal__submit" @click="abortDeletePump()">Abort</button>
+    </div>
+
+<!--    ------------------------------ RECIPES ------------------------------------------ -->
+
+    <div x-show="component === 'recipes'">
+        <table>
+            <tr class="recipe-tr">
+                <th>Name</th>
+                <th>-</th>
+                <th @click="createRecipeModal()" class="action new">new</th>
+            </tr>
+            <template x-for="recipe in recipes">
+                <tr class="recipe-tr">
+                    <td x-text="recipe.Name"></td>
+                    <td @click="updateRecipeModal(recipe)" class="action edit">edit</td>
+                    <td @click="deleteRecipeModal(recipe)" class="action delete">delete</td>
+                </tr>
+            </template>
+        </table>
+    </div>
+
+    <div class="modal" x-show="modal === 'createRecipeModal'">
+        <div class="modal__input">
+            <span>Name</span>
+            <input type="text" x-model="selectedRecipe.Name">
+        </div>
+        <button class="modal__submit" @click="addIngredient()">Add Ingredient</button>
+        <template x-for="(ingredient, index) in selectedRecipe.Ingredients">
+            <div>
+                <div class="modal__input">
+                    <span>PumpID</span>
+                    <input type="text" x-model="selectedRecipe.Ingredients[index].PumpID">
+                </div>
+                <div class="modal__input">
+                    <span>Parts</span>
+                    <input type="text" x-model="selectedRecipe.Ingredients[index].Parts">
+                </div>
+                <p>---</p>
+            </div>
+        </template>
+        <button class="modal__submit" @click="createRecipe()">Create</button>
+    </div>
+
+    <div class="modal" x-show="modal === 'updateRecipeModal'">
+        <div class="modal__input">
+            <span>Name</span>
+            <input type="text" x-model="selectedRecipe.Name">
+        </div>
+        <button class="modal__submit" @click="addIngredient()">Add Ingredient</button>
+        <template x-for="(ingredient, index) in selectedRecipe.Ingredients">
+            <div>
+                <div class="modal__input">
+                    <span>PumpID</span>
+                    <input type="text" x-model="selectedRecipe.Ingredients[index].PumpID">
+                </div>
+                <div class="modal__input">
+                    <span>Parts</span>
+                    <input type="text" x-model="selectedRecipe.Ingredients[index].Parts">
+                </div>
+                <p>---</p>
+            </div>
+        </template>
+        <button class="modal__submit" @click="updateRecipe()">Update</button>
+    </div>
+
+    <div class="modal" x-show="modal === 'deleteRecipeModal'">
+        <button class="modal__submit" @click="deleteRecipe()">Delete</button>
+        <button class="modal__submit" @click="abortDeleteRecipe()">Abort</button>
+    </div>
+
+</body>
+</html>
+
+<style>
+    [x-cloak] {
+        display: none;
+    }
+    body {
+        text-align: center;
+    }
+    nav {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+    }
+    h2:hover {
+        color: grey;
+        cursor: pointer;
+    }
+    table {
+        margin: 0 auto;
+
+    }
+    .pump-tr {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        justify-content: center;
+        gap: 10px;
+        text-align: center;
+        margin-top: 10px;
+    }
+    .recipe-tr {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        justify-content: center;
+        gap: 10px;
+        text-align: center;
+        margin-top: 10px;
+    }
+    .action {
+        cursor: pointer;
+        border: 1px solid black;
+    }
+    .new {
+        background: green;
+    }
+    .edit {
+        background: orange;
+    }
+    .delete {
+        background: red;
+    }
+    .active, .active:hover {
+        color: red;
+    }
+    .modal {
+        position: absolute;
+        background: white;
+        border: 1px solid black;
+        width: 400px;
+        top: 50px;
+        left: calc(50% - 200px);
+        display: flex;
+        flex-direction: column;
+    }
+    .modal--delete {
+        position: absolute;
+        background: white;
+        border: 1px solid black;
+        width: 200px;
+        top: 50px;
+        left: calc(50% - 100px);
+        display: flex;
+        justify-content: space-around;
+    }
+    .modal__input {
+        margin-top: 20px;
+        display: flex;
+        justify-content: space-between;
+        padding: 0 10px;
+    }
+    .modal__submit {
+        margin: 20px 10px;
+    }
+</style>
+
+<script>
+    function alpineData() {
+        return {
+            component: 'pumps',
+            modal: '',
+
+            // ------------------ PUMPS ---------------------------------------------
+
+            pumps: {},
+            selectedPump: {
+                'Name': '',
+                'MotorPin': 0,
+                'SensorPin': 0,
+                'MlPerMinute': 0,
+                'ID': 0,
+            },
+
+            openPumps() {
+                this.component = 'pumps'
+            },
+
+            createPumpModal() {
+                this.selectedPump = {
+                    'Name': '',
+                    'MotorPin': 0,
+                    'SensorPin': 0,
+                    'MlPerMinute': 0,
+                    'ID': 0,
+                };
+                this.modal = 'createPumpModal'
+            },
+            createPump() {
+                return fetch(`http://localhost:3000/pump`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        "ID": this.selectedPump.ID,
+                        "Name": this.selectedPump.Name,
+                        "MotorPin": parseInt(this.selectedPump.MotorPin),
+                        "SensorPin": parseInt(this.selectedPump.SensorPin)
+                    }),
+                }).then(() => this.fetchData()).then(() => this.modal = '');
+            },
+
+            updatePumpModal(pump) {
+                this.selectedPump = pump;
+                this.modal = 'updatePumpModal'
+            },
+            updatePump() {
+                return fetch(`http://localhost:3000/pump`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        "ID": this.selectedPump.ID,
+                        "Name": this.selectedPump.Name,
+                        "MotorPin": parseInt(this.selectedPump.MotorPin),
+                        "MlPerMinute": parseInt(this.selectedPump.MlPerMinute),
+                        "SensorPin": parseInt(this.selectedPump.SensorPin)
+                    }),
+                }).then(() => this.fetchData()).then(() => this.modal = '');
+            },
+
+            deletePumpModal(pump) {
+                this.selectedPump = pump;
+                this.modal = 'deletePumpModal';
+            },
+            abortDeletePump() {
+                this.modal = '';
+            },
+            deletePump() {
+                return fetch(`http://localhost:3000/pump/${this.selectedPump.ID}`, {
+                    method: 'DELETE',
+                }).then(() => this.fetchData()).then(() => this.modal = '');
+            },
+
+
+            // ------------------ RECIPES ---------------------------------------------
+
+            recipes: {},
+            selectedRecipe: {
+                'Name': '',
+                'ID': 0,
+                'Ingredients': []
+            },
+
+            openRecipes() {
+                this.component = 'recipes'
+            },
+
+            createRecipeModal() {
+              this.selectedRecipe = {
+                  'Name': '',
+                  'ID': 0,
+                  'Ingredients': []
+              };
+              this.modal = 'createRecipeModal'
+            },
+            createRecipe() {
+                this.selectedRecipe.Ingredients.forEach(ingredient => {
+                    ingredient.PumpID = parseInt(ingredient.PumpID);
+                    ingredient.Parts = parseInt(ingredient.Parts);
+                })
+
+                return fetch(`http://localhost:3000/recipe`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        "Name": this.selectedRecipe.Name,
+                        "Ingredients": this.selectedRecipe.Ingredients
+                    }),
+                }).then(() => this.fetchData()).then(() => this.modal = '');
+            },
+
+            updateRecipeModal(recipe) {
+                this.selectedRecipe = recipe;
+                this.modal = 'updateRecipeModal'
+            },
+            updateRecipe() {
+                this.selectedRecipe.Ingredients.forEach(ingredient => {
+                    ingredient.PumpID = parseInt(ingredient.PumpID);
+                    ingredient.Parts = parseInt(ingredient.Parts);
+                })
+
+                return fetch(`http://localhost:3000/recipe`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        "id": this.selectedRecipe.ID,
+                        "Name": this.selectedRecipe.Name,
+                        "Ingredients": this.selectedRecipe.Ingredients
+                    }),
+                }).then(() => this.fetchData()).then(() => this.modal = '');
+            },
+
+            deleteRecipeModal(recipe) {
+                this.selectedRecipe = recipe;
+                this.modal = 'deleteRecipeModal';
+            },
+            abortDeleteRecipe() {
+                this.modal = '';
+            },
+            deleteRecipe() {
+                return fetch(`http://localhost:3000/recipe/${this.selectedRecipe.ID}`, {
+                    method: 'DELETE',
+                }).then(() => this.fetchData()).then(() => this.modal = '');
+            },
+
+            addIngredient() {
+              this.selectedRecipe.Ingredients.push({
+                  "PumpID": 0,
+                  "Parts": 0
+              })
+            },
+
+            // ------------------ INIT ---------------------------------------------
+
+            fetchData() {
+                this.fetchPumps();
+                this.fetchRecipes();
+            },
+            fetchPumps() {
+                return fetch('http://localhost:3000/pump').then(response => response.json()).then(data => {
+                    this.pumps = data;
+                })
+            },
+            fetchRecipes() {
+                return fetch('http://localhost:3000/recipe').then(response => response.json()).then(data => {
+                    this.recipes = data;
+                })
+            },
+        }
+    }
+</script>
