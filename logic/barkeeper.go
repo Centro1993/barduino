@@ -64,10 +64,10 @@ func monitorPump(pump models.Pump) error {
 	if runningPumps[pump.ID] == nil {
 		return errors.New("pump has no open channel and cannot be monitored")
 	}
-	currentChannel := runningPumps[pump.ID]
+	runningPumps[pump.ID]
 
 	// tell pump to start
-	currentChannel <- models.PumpStatus{
+	runningPumps[pump.ID] <- models.PumpStatus{
 		CurrentlyServing: drinkStatus.CurrentlyServing,
 		IngredientEmpty: drinkStatus.IngredientEmpty,
 	}
@@ -76,17 +76,17 @@ func monitorPump(pump models.Pump) error {
 		Therefore, we have to send a message before we await an answer
 		Else, we will enter a deadlock
 	*/
-	for pumpStatus := range currentChannel {
+	for pumpStatus := range runningPumps[pump.ID] {
 		// this stops all pumps if this pump runs dry
 		if pumpStatus.IngredientEmpty {
 			drinkStatus.IngredientEmpty = true
 			// acknowledge the report
-			currentChannel <- models.PumpStatus{
+			runningPumps[pump.ID] <- models.PumpStatus{
 				IngredientEmpty: drinkStatus.IngredientEmpty,
 				CurrentlyServing: drinkStatus.CurrentlyServing,
 			}
 			// continously ask the pump if the ingredient has been refilled
-			for dryPumpStatus := range currentChannel {
+			for dryPumpStatus := range runningPumps[pump.ID] {
 				// if the pump has been refilled, inform the other pumpMonitors
 				if !dryPumpStatus.IngredientEmpty {
 					drinkStatus.IngredientEmpty = false
@@ -94,14 +94,14 @@ func monitorPump(pump models.Pump) error {
 					break
 				}
 				// if not, tell the pump to keep checking (or to stop if the user chose so)
-				currentChannel <- models.PumpStatus{
+				runningPumps[pump.ID] <- models.PumpStatus{
 					IngredientEmpty: drinkStatus.IngredientEmpty,
 					CurrentlyServing: drinkStatus.CurrentlyServing,
 				}
 			}
 		}
 		// return the overall drink status to the pump
-		currentChannel <- models.PumpStatus{
+		runningPumps[pump.ID] <- models.PumpStatus{
 			IngredientEmpty: drinkStatus.IngredientEmpty,
 			CurrentlyServing: drinkStatus.CurrentlyServing,
 		}
