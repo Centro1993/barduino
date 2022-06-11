@@ -70,6 +70,11 @@ func monitorPump(pump models.Pump) error {
 		if pumpStatus.IngredientEmpty {
 			drinkStatus.IngredientEmpty = true
 			fmt.Println("barkeeper: Pump reports dry")
+			// acknowledge the report
+			runningPumps[pump.ID] <- models.PumpStatus{
+				IngredientEmpty: drinkStatus.IngredientEmpty,
+				CurrentlyServing: drinkStatus.CurrentlyServing,
+			}
 			// continously ask the pump if the ingredient has been refilled
 			for dryPumpStatus := range runningPumps[pump.ID] {
 				fmt.Println("Barkeeper: inner loop")
