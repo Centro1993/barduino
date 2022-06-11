@@ -4,7 +4,6 @@ import (
 	"barduino/gpio"
 	"barduino/models"
 	"errors"
-	"fmt"
 )
 
 const SERVING_SIZE_IN_ML uint = 300
@@ -77,7 +76,6 @@ func monitorPump(pump models.Pump) error {
 		// this stops all pumps if this pump runs dry
 		if pumpStatus.IngredientEmpty {
 			drinkStatus.IngredientEmpty = true
-			fmt.Println("barkeeper: Pump reports dry")
 			// acknowledge the report
 			runningPumps[pump.ID] <- models.PumpStatus{
 				IngredientEmpty: drinkStatus.IngredientEmpty,
@@ -85,15 +83,12 @@ func monitorPump(pump models.Pump) error {
 			}
 			// continously ask the pump if the ingredient has been refilled
 			for dryPumpStatus := range runningPumps[pump.ID] {
-				fmt.Println("Barkeeper: inner loop")
 				// if the pump has been refilled, inform the other pumpMonitors
 				if !dryPumpStatus.IngredientEmpty {
-					fmt.Println("barkeeper: pump reports high again")
 					drinkStatus.IngredientEmpty = false
 					// and continue pumping
 					break
 				}
-				fmt.Println("barkeeper: end of outer loop")
 				// if not, tell the pump to keep checking (or to stop if the user chose so)
 				runningPumps[pump.ID] <- models.PumpStatus{
 					IngredientEmpty: drinkStatus.IngredientEmpty,

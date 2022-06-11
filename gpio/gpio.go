@@ -4,7 +4,6 @@ import (
 	"barduino/models"
 	"errors"
 	"time"
-	"fmt"
 
 	"github.com/stianeikeland/go-rpio/v4"
 )
@@ -119,8 +118,6 @@ func RunPump(barkeeper chan models.PumpStatus, pumpInstruction models.PumpInstru
 		Else, we will enter a deadlock
 	*/
 	for pumpStatus := range barkeeper { 
-		fmt.Println("Pumptime remaining:")
-		fmt.Println(pumpInstruction)
 		
 		// cancel the drink if the barkeeper demands it
 		if !pumpStatus.CurrentlyServing {
@@ -131,7 +128,6 @@ func RunPump(barkeeper chan models.PumpStatus, pumpInstruction models.PumpInstru
 
 		// pause the execution if another pump ran dry
 		if pumpStatus.IngredientEmpty {
-			fmt.Println("pump: another pump ran dry, entering halting loop")
 			pin.Low()
 
 			// acknowledge halt
@@ -146,8 +142,6 @@ func RunPump(barkeeper chan models.PumpStatus, pumpInstruction models.PumpInstru
 
 			// check in with barkeeper until other pump is refilled
 			for haltedPumpStatus := range barkeeper {
-				fmt.Println("pump: halting loop")
-				fmt.Println(haltedPumpStatus)
 				// cancel the drink if the barkeeper demands it
 				if !haltedPumpStatus.CurrentlyServing {
 					pin.Low()
@@ -174,7 +168,6 @@ func RunPump(barkeeper chan models.PumpStatus, pumpInstruction models.PumpInstru
 					IngredientEmpty: false,
 				}
 			}
-			fmt.Println("pump: leaving halting loop")
 			continue
 		}
 
@@ -211,7 +204,6 @@ func RunPump(barkeeper chan models.PumpStatus, pumpInstruction models.PumpInstru
 
 				// and continously check the sensors 
 				for pumpStatus := range barkeeper {
-					fmt.Println("pump: inner loop")
 					// stop if the barkeeper tells the pump to stop
 					if !pumpStatus.CurrentlyServing {
 						close(barkeeper)
@@ -222,7 +214,6 @@ func RunPump(barkeeper chan models.PumpStatus, pumpInstruction models.PumpInstru
 						// the pump starts up again, so set the lastStartTime for the next remaining time computation
 						lastPumpStartTime = time.Now().UnixMilli()
 						// and skip to the end of the outer loop where the barkeeper is informed
-						fmt.Println("pump: Sensor is high again")
 						break
 					}
 					// tell the barkeeper that we are still missing our ingredient
@@ -237,7 +228,6 @@ func RunPump(barkeeper chan models.PumpStatus, pumpInstruction models.PumpInstru
 		} else {	// else, sleep until the the Pumping is done, whatever is closer
 			time.Sleep(time.Duration(pumpInstruction.TimeInMs * int64(time.Millisecond)))
 		}
-		fmt.Println("pump: End of outer loop")
 		// check in with the barkeeper and start the next loop
 		barkeeper <- models.PumpStatus{
 			CurrentlyServing: true,
