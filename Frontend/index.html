@@ -199,6 +199,9 @@
             },
             createDrink() {
                 this.modal = true;
+                this.ingredientEmpty = false;
+                this.currentlyServing = false;
+
                 this.fetchRecipeState().then(() => {
                     const canProduceRecipe = this.recipeState[this.selectedRecipe.ID];
                     if (canProduceRecipe) {
@@ -222,6 +225,10 @@
 
                                     if (this.ingredientEmpty || !this.currentlyServing) {
                                         clearInterval(this.fetchDrinkInterval);
+                                    }
+
+                                    if (!this.currentlyServing) {
+                                        this.modal = false;
                                     }
 
                                     if (this.ingredientEmpty) {
