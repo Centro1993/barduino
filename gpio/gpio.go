@@ -12,7 +12,7 @@ import (
 // TODO check if there are concurrency problems when using the Pins at the same time
 
 
-const TIME_BETWEEN_SENSOR_CHECKS_IN_MS int64 = 100
+const TIME_BETWEEN_SENSOR_CHECKS_IN_MS int64 = 300
 const AMOUNT_OF_SENSOR_STATES_SAVED int = 10
 
 // Access this to get the rolling average of the last few states of a Sensor
@@ -179,6 +179,7 @@ func RunPump(barkeeper chan models.PumpStatus, pumpInstruction models.PumpInstru
 
 				// and continously check the sensors 
 				for pumpStatus := range barkeeper {
+					fmt.Println("pump: inner loop")
 					// stop if the barkeeper tells the pump to stop
 					if !pumpStatus.CurrentlyServing {
 						close(barkeeper)
@@ -188,7 +189,8 @@ func RunPump(barkeeper chan models.PumpStatus, pumpInstruction models.PumpInstru
 					if AverageStateCache[pumpInstruction.Pump.SensorPin] {
 						// the pump starts up again, so set the lastStartTime for the next remaining time computation
 						lastPumpStartTime = time.Now().UnixMilli()
-						// and wait for the barkeeper to tell the pump to start up again
+						// and skip to the end of the outer loop where the barkeeper is informed
+						fmt.Println("pump: Sensor is high again")
 						break
 					}
 					// tell the barkeeper that we are still missing our ingredient
@@ -203,6 +205,7 @@ func RunPump(barkeeper chan models.PumpStatus, pumpInstruction models.PumpInstru
 		} else {	// else, sleep until the the Pumping is done, whatever is closer
 			time.Sleep(time.Duration(pumpInstruction.TimeInMs * int64(time.Millisecond)))
 		}
+		fmt.Println("pump: End of outer loop")
 		// check in with the barkeeper and start the next loop
 		barkeeper <- models.PumpStatus{
 			CurrentlyServing: true,
