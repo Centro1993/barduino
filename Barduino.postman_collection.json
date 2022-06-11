@@ -321,9 +321,45 @@
 			"item": [
 				{
 					"name": "Create Drink",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "GET",
-						"header": []
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"RecipeID\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "State",
+			"item": [
+				{
+					"name": "Get all Sensor States",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:3000/state/sensor",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"state",
+								"sensor"
+							]
+						}
 					},
 					"response": []
 				}

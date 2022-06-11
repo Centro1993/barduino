@@ -17,6 +17,7 @@ var drinkStatus models.DrinkStatus = models.DrinkStatus{
 var runningPumps map[uint]chan models.PumpStatus
 
 func PourDrink (drink models.Drink) error {
+	runningPumps = make(map[uint]chan models.PumpStatus)
 	recipe := drink.Recipe
 
 	if drinkStatus.CurrentlyServing {
