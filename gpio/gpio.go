@@ -131,6 +131,7 @@ func RunPump(barkeeper chan models.PumpStatus, pumpInstruction models.PumpInstru
 
 		// pause the execution if another pump ran dry
 		if pumpStatus.IngredientEmpty {
+			fmt.Println("pump: another pump ran dry, entering halting loop")
 			pin.Low()
 
 			// acknowledge halt
@@ -145,6 +146,8 @@ func RunPump(barkeeper chan models.PumpStatus, pumpInstruction models.PumpInstru
 
 			// check in with barkeeper until other pump is refilled
 			for haltedPumpStatus := range barkeeper {
+				fmt.Println("pump: halting loop")
+				fmt.Println(haltedPumpStatus)
 				// cancel the drink if the barkeeper demands it
 				if !haltedPumpStatus.CurrentlyServing {
 					pin.Low()
@@ -158,9 +161,9 @@ func RunPump(barkeeper chan models.PumpStatus, pumpInstruction models.PumpInstru
 						CurrentlyServing: true,
 						IngredientEmpty: false,
 					}
-					// the pump starts up again after this loop, so set the lastStartTime for the next remaining time computation
+					// the pump starts up again, so set the lastStartTime for the next remaining time computation
 					lastPumpStartTime = currentTime
-
+					pin.High()
 					// resume business as usual / outer loop
 					break
 				}
@@ -171,6 +174,7 @@ func RunPump(barkeeper chan models.PumpStatus, pumpInstruction models.PumpInstru
 					IngredientEmpty: false,
 				}
 			}
+			fmt.Println("pump: leaving halting loop")
 			continue
 		}
 
