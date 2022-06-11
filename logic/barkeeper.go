@@ -89,6 +89,13 @@ func monitorPump(pump models.Pump) error {
 			CurrentlyServing: drinkStatus.CurrentlyServing,
 		}
 	}
+	// When the channel has been closed, delete it from the channel map
+	delete(runningPumps, pump.ID)
+
+	// if there are no more channels in the map, we are no longer serving
+	if (len(runningPumps) == 0) {
+		drinkStatus.CurrentlyServing = false
+	}
 
 	return nil
 }
