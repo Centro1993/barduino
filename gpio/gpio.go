@@ -244,6 +244,11 @@ func RunPump(barkeeper chan models.PumpStatus, pumpInstruction models.PumpInstru
 	close(barkeeper)
 }
 
+func StopMotor(pump models.Pump) {
+	pin := rpio.Pin(pump.MotorPin)
+	pin.Low()
+}
+
 func CanBeServed (recipe models.Recipe) bool {
 	for _, ingredient := range recipe.Ingredients {
 		if !AverageStateCache[ingredient.Pump.SensorPin] {

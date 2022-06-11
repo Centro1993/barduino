@@ -10,7 +10,7 @@ import (
 	// TODO unique over two rows
 	MotorPin uint	`gorm:"index:,unique,composite:pin;notNull;"`
 	SensorPin uint `gorm:"index:,unique,composite:pin;notNull;"`
-	MlPerMinute uint `gorm:"default:48"`
+	MlPerMinute uint `gorm:"default:150"`
   }
 
   type PumpStatus struct {

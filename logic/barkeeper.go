@@ -47,6 +47,14 @@ func CancelDrink () error {
 	}
 
 	drinkStatus.CurrentlyServing = false
+
+	// As a safety Measure, manually disable all pumps
+	var pumps []models.Pump
+	models.DB.Find(&pumps)
+
+	for _, pump := range pumps {
+		gpio.StopMotor(pump)
+	}
 	return nil
 }
 
