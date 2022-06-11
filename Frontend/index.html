@@ -229,10 +229,12 @@
                                     }
 
                                     if (!this.currentlyServing) {
+                                        console.info('not serving at the moment')
                                         this.modal = false;
                                     }
 
                                     if (this.ingredientEmpty) {
+                                        console.info('empty ingredients')
                                         this.setEmptyIngredients();
                                     }
                                 }, 100);
@@ -249,6 +251,7 @@
                 })
             },
             cancel() {
+                console.info('cancel pressed')
                 this.modal = false;
             },
             stopDrink() {
