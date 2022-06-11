@@ -66,6 +66,8 @@ func monitorPump(pump models.Pump) error {
 	}
 
 	// tell pump to start
+	fmt.Println("barkeeper: starting pump")
+	fmt.Println(drinkStatus)
 	runningPumps[pump.ID] <- models.PumpStatus{
 		CurrentlyServing: drinkStatus.CurrentlyServing,
 		IngredientEmpty: drinkStatus.IngredientEmpty,
@@ -76,8 +78,13 @@ func monitorPump(pump models.Pump) error {
 		Else, we will enter a deadlock
 	*/
 	for pumpStatus := range runningPumps[pump.ID] {
+		fmt.Printf("barkeeper pump %d: comm loop started", pump.ID)
+
 		// this stops all pumps if this pump runs dry
 		if pumpStatus.IngredientEmpty {
+			fmt.Printf("barkeeper pump %d: pump reports empty", pump.ID)
+			fmt.Println(pumpStatus)
+
 			drinkStatus.IngredientEmpty = true
 			// acknowledge the report
 			runningPumps[pump.ID] <- models.PumpStatus{
@@ -100,6 +107,8 @@ func monitorPump(pump models.Pump) error {
 			}
 		}
 		// return the overall drink status to the pump
+		fmt.Printf("barkeeper pump %d: drink status update to pump", pump.ID)
+		fmt.Println(drinkStatus)
 		runningPumps[pump.ID] <- models.PumpStatus{
 			IngredientEmpty: drinkStatus.IngredientEmpty,
 			CurrentlyServing: drinkStatus.CurrentlyServing,
