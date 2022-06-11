@@ -132,18 +132,45 @@ func RunPump(barkeeper chan models.PumpStatus, pumpInstruction models.PumpInstru
 		// pause the execution if another pump ran dry
 		if pumpStatus.IngredientEmpty {
 			pin.Low()
-			// compute remaining time
-			currentTime := time.Now().UnixMilli()
-			pumpInstruction.TimeInMs -= (currentTime - lastPumpStartTime)
-			// and assume the pump starts after this loop, so set the lastStartTime for the next remaining time computation
-			lastPumpStartTime = currentTime
-			// wait a while and check in with the barkeeper again
-			time.Sleep(time.Duration(TIME_BETWEEN_SENSOR_CHECKS_IN_MS * int64(time.Millisecond)))
+
+			// acknowledge halt
 			barkeeper <- models.PumpStatus{
 				CurrentlyServing: false,
 				IngredientEmpty: false,
 			}
-			continue
+
+			// compute remaining time
+			currentTime := time.Now().UnixMilli()
+			pumpInstruction.TimeInMs -= (currentTime - lastPumpStartTime)
+
+			// check in with barkeeper until other pump is refilled
+			for haltedPumpStatus := range barkeeper {
+				// cancel the drink if the barkeeper demands it
+				if !haltedPumpStatus.CurrentlyServing {
+					pin.Low()
+					close(barkeeper)
+					return
+				}
+				// check if the barkeeper reports that the other pump has been refilled
+				if !haltedPumpStatus.IngredientEmpty {
+					// acknowledge resumption
+					barkeeper <- models.PumpStatus{
+						CurrentlyServing: true,
+						IngredientEmpty: false,
+					}
+					// the pump starts up again after this loop, so set the lastStartTime for the next remaining time computation
+					lastPumpStartTime = currentTime
+
+					// resume business as usual / outer loop
+					break
+				}
+				// wait a while and check in with the barkeeper again
+				time.Sleep(time.Duration(TIME_BETWEEN_SENSOR_CHECKS_IN_MS * int64(time.Millisecond)))
+				barkeeper <- models.PumpStatus{
+					CurrentlyServing: false,
+					IngredientEmpty: false,
+				}
+			}
 		}
 
 		// compute remaining time
