@@ -64,7 +64,6 @@ func monitorPump(pump models.Pump) error {
 	if runningPumps[pump.ID] == nil {
 		return errors.New("pump has no open channel and cannot be monitored")
 	}
-	runningPumps[pump.ID]
 
 	// tell pump to start
 	runningPumps[pump.ID] <- models.PumpStatus{
