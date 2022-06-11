@@ -171,6 +171,7 @@ func RunPump(barkeeper chan models.PumpStatus, pumpInstruction models.PumpInstru
 					IngredientEmpty: false,
 				}
 			}
+			continue
 		}
 
 		// compute remaining time
