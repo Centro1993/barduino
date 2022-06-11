@@ -33,7 +33,7 @@ func (recipe Recipe) ConvertRecipeToPumpInstructions(servingSizeInMl uint) []Pum
 	for i, ingredient := range recipe.Ingredients {
 		pumpInstructions[i] = PumpInstruction{
 			Pump: ingredient.Pump,
-			TimeInMs: int64(float64(ingredient.Parts) * float64(mlPerPart) / (float64(ingredient.Pump.MlPerMinute) / 60.0 / 10000.0)),
+			TimeInMs: int64(float64(ingredient.Parts) * float64(mlPerPart) / (float64(ingredient.Pump.MlPerMinute) / 60.0 / 1000.0)),
 		}
 	}
 
