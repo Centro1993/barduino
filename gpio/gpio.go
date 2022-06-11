@@ -3,6 +3,7 @@ package gpio
 import (
 	"barduino/models"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/stianeikeland/go-rpio/v4"
@@ -240,6 +241,8 @@ func RunPump(barkeeper chan models.PumpStatus, pumpInstruction models.PumpInstru
 }
 
 func StopMotor(pump models.Pump) {
+	fmt.Println("stopping pump")
+	fmt.Println(pump)
 	pin := rpio.Pin(pump.MotorPin)
 	pin.Low()
 }

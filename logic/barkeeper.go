@@ -4,6 +4,7 @@ import (
 	"barduino/gpio"
 	"barduino/models"
 	"errors"
+	"fmt"
 )
 
 const SERVING_SIZE_IN_ML uint = 200
@@ -41,6 +42,8 @@ func PourDrink (drink models.Drink) error {
 }
 
 func CancelDrink () error {
+	fmt.Println("cancel drink")
+	fmt.Print(drinkStatus)
 	drinkStatus.CurrentlyServing = false
 
 	// As a safety Measure, manually disable all pumps
