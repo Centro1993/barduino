@@ -7,7 +7,7 @@ import (
 	"sync"
 )
 
-const SERVING_SIZE_IN_ML uint = 300
+const SERVING_SIZE_IN_ML uint = 200
 
 // Drink serving state
 var drinkStatus models.DrinkStatus = models.DrinkStatus{
