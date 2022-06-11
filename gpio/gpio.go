@@ -111,7 +111,6 @@ func computeAverageSensorState(pump *models.Pump) rpio.State {
 func RunPump(barkeeper chan models.PumpStatus, pumpInstruction models.PumpInstruction) {
 	pin := rpio.Pin(pumpInstruction.Pump.MotorPin)
 	pin.Output()
-	pin.PullDown()
 	
 	lastPumpStartTime := time.Now().UnixMilli()
 	
@@ -124,6 +123,8 @@ func RunPump(barkeeper chan models.PumpStatus, pumpInstruction models.PumpInstru
 		// cancel the drink if the barkeeper demands it
 		if !pumpStatus.CurrentlyServing {
 			fmt.Printf("pump %d: canceling drink\n", pumpInstruction.Pump.ID)
+			pin.Low()
+			time.Sleep(time.Millisecond*20)
 			pin.Low()
 			close(barkeeper)
 			return
