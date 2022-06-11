@@ -220,6 +220,7 @@
                             } else {
                                 this.fetchDrinkInterval = setInterval(() => {
                                     fetch('http://localhost:3000/state/drink').then(response => response.json()).then(data => {
+                                        console.info(data)
                                         this.ingredientEmpty = data.IngredientEmpty;
                                         this.currentlyServing = data.CurrentlyServing;
                                     })
