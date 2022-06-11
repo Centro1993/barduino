@@ -4,6 +4,7 @@ import (
 	"barduino/models"
 	"errors"
 	"time"
+	"fmt"
 
 	"github.com/stianeikeland/go-rpio/v4"
 )
@@ -118,14 +119,12 @@ func RunPump(barkeeper chan models.PumpStatus, pumpInstruction models.PumpInstru
 		Else, we will enter a deadlock
 	*/
 	for pumpStatus := range barkeeper { 
+		fmt.Println("Pumptime remaining:")
+		fmt.Println(pumpInstruction)
 		
 		// cancel the drink if the barkeeper demands it
 		if !pumpStatus.CurrentlyServing {
 			pin.Low()
-			barkeeper <- models.PumpStatus{
-				CurrentlyServing: false,
-				IngredientEmpty: false,
-			}
 			close(barkeeper)
 			return
 		}
@@ -212,12 +211,6 @@ func RunPump(barkeeper chan models.PumpStatus, pumpInstruction models.PumpInstru
 	}
 
 	pin.Low()
-
-	barkeeper <- models.PumpStatus{
-		CurrentlyServing: false,
-		IngredientEmpty: false,
-	}
-
 	close(barkeeper)
 }
 
