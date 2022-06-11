@@ -78,11 +78,11 @@ func monitorPump(pump models.Pump) error {
 		Else, we will enter a deadlock
 	*/
 	for pumpStatus := range runningPumps[pump.ID] {
-		fmt.Printf("barkeeper pump %d: comm loop started", pump.ID)
+		fmt.Printf("barkeeper pump %d: comm loop started\n", pump.ID)
 
 		// this stops all pumps if this pump runs dry
 		if pumpStatus.IngredientEmpty {
-			fmt.Printf("barkeeper pump %d: pump reports empty", pump.ID)
+			fmt.Printf("barkeeper pump %d: pump reports empty\n", pump.ID)
 			fmt.Println(pumpStatus)
 
 			drinkStatus.IngredientEmpty = true

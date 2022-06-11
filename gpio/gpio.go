@@ -111,6 +111,7 @@ func computeAverageSensorState(pump *models.Pump) rpio.State {
 func RunPump(barkeeper chan models.PumpStatus, pumpInstruction models.PumpInstruction) {
 	pin := rpio.Pin(pumpInstruction.Pump.MotorPin)
 	pin.Output()
+	pin.PullDown()
 	
 	lastPumpStartTime := time.Now().UnixMilli()
 	
@@ -119,10 +120,10 @@ func RunPump(barkeeper chan models.PumpStatus, pumpInstruction models.PumpInstru
 		Else, we will enter a deadlock
 	*/
 	for pumpStatus := range barkeeper { 
-		fmt.Printf("pump %d: outer loop", pumpInstruction.Pump.ID)
+		fmt.Printf("pump %d: outer loop\n", pumpInstruction.Pump.ID)
 		// cancel the drink if the barkeeper demands it
 		if !pumpStatus.CurrentlyServing {
-			fmt.Printf("pump %d: canceling drink", pumpInstruction.Pump.ID)
+			fmt.Printf("pump %d: canceling drink\n", pumpInstruction.Pump.ID)
 			pin.Low()
 			close(barkeeper)
 			return
