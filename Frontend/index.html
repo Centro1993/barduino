@@ -32,7 +32,7 @@
             <template x-for="ingredient in emptyIngredients">
                 <p x-text="ingredient"></p>
             </template>
-            <button @click="cancel()" class="button">CANCEL</button>
+            <button @click="stopDrink()" class="button">CANCEL</button>
         </div>
     </div>
 </div>
@@ -199,6 +199,10 @@
             },
             createDrink() {
                 this.modal = true;
+                this.ingredientEmpty = false;
+                this.currentlyServing = false;
+                this.canProduceDrink = true;
+
                 this.fetchRecipeState().then(() => {
                     const canProduceRecipe = this.recipeState[this.selectedRecipe.ID];
                     if (canProduceRecipe) {
@@ -222,6 +226,10 @@
 
                                     if (this.ingredientEmpty || !this.currentlyServing) {
                                         clearInterval(this.fetchDrinkInterval);
+                                    }
+
+                                    if (!this.currentlyServing) {
+                                        this.modal = false;
                                     }
 
                                     if (this.ingredientEmpty) {
