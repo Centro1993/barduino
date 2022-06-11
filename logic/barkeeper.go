@@ -41,10 +41,6 @@ func PourDrink (drink models.Drink) error {
 }
 
 func CancelDrink () error {
-	if !drinkStatus.CurrentlyServing {
-		return errors.New("cannot cancel drink, not currently serving")
-	}
-
 	drinkStatus.CurrentlyServing = false
 
 	// As a safety Measure, manually disable all pumps
@@ -53,6 +49,10 @@ func CancelDrink () error {
 
 	for _, pump := range pumps {
 		gpio.StopMotor(pump)
+	}
+
+	if !drinkStatus.CurrentlyServing {
+		return errors.New("cannot cancel drink, not currently serving")
 	}
 	return nil
 }
