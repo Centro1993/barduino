@@ -14,20 +14,25 @@
     <img @click="previousRecipe()" class="arrow--up" src="arrow_up-export.png">
     <h2 x-text="selectedRecipe.Name">CURRENT RECIPE</h2>
     <img @click="nextRecipe()" class="arrow--down" src="arrow_down-export.png">
-    <button class="button" @click="await createDrink()">START</button>
+    <button class="button" @click="createDrink()">START</button>
 </div>
 <div class="modal-overlay" x-show="modal">
     <div class="modal">
         <div x-show="canProduceDrink">
             <p class="modal-headline">Drink in progress...</p>
-            <img src="beer-loading.gif" alt="Looped animation of a beer being drafted">
-            <button class="button">STOP</button>
+            <img src="beer-loading.gif" alt="Loop of animated beers being filled and emptied in a wave pattern">
+            <button @click="stopDrink()" class="button">STOP</button>
         </div>
         <div x-show="!canProduceDrink && !ingredientEmpty">
-            <p class="modal-headline">Couldn't create drink</p>
+            <p class="modal-headline">Couldn't create drink. Complain to the creators.</p>
+            <button @click="cancel()" class="button">CANCEL</button>
         </div>
         <div x-show="!canProduceDrink && ingredientEmpty">
-            <p class="modal-headline">Ingredients empty</p>
+            <p class="modal-headline">Ingredients empty. Check these:</p>
+            <template x-for="ingredient in emptyIngredients">
+                <p x-text="ingredient"></p>
+            </template>
+            <button @click="cancel()" class="button">CANCEL</button>
         </div>
     </div>
 </div>
@@ -104,7 +109,7 @@
         padding: 10px 40px;
         border: 2px solid #a06b38;
         background: #323232;
-        margin-top: 80px;
+        margin-top: 60px;
         font-family: 'munro', serif;
         font-size: 2rem;
         color: #eec39a;
@@ -150,7 +155,6 @@
 <script>
     function alpineData() {
         return {
-            component: 'pumps',
             modal: false,
             canProduceDrink: true,
             recipeState: {},
@@ -160,6 +164,9 @@
 
             fetchDrinkInterval: null,
 
+            emptyIngredients: [],
+
+            pumps: {},
             // ------------------ RECIPES ---------------------------------------------
 
             recipes: {},
@@ -190,7 +197,7 @@
                 }
                 this.selectedRecipe = this.recipes[this.recipeIterator];
             },
-            async createDrink() {
+            createDrink() {
                 this.modal = true;
                 this.fetchRecipeState().then(() => {
                     const canProduceRecipe = this.recipeState[this.selectedRecipe.ID];
@@ -216,6 +223,10 @@
                                     if (this.ingredientEmpty || !this.currentlyServing) {
                                         clearInterval(this.fetchDrinkInterval);
                                     }
+
+                                    if (this.ingredientEmpty) {
+                                        this.setEmptyIngredients();
+                                    }
                                 }, 100);
                             }
                         });
@@ -224,11 +235,39 @@
                     }
                 });
             },
-            async fetchRecipeState() {
+            fetchRecipeState() {
                 return fetch('http://localhost:3000/state/recipe').then(response => response.json()).then(data => {
                     this.recipeState = data;
                 })
-            }
+            },
+            cancel() {
+                this.modal = false;
+            },
+            stopDrink() {
+                fetch(`http://localhost:3000/drink`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        "RecipeID": this.selectedRecipe.ID,
+                    }),
+                }).then(()=> {
+                    this.modal = false;
+                });
+            },
+            setEmptyIngredients() {
+                this.fetchPumps();
+                this.selectedRecipe.Ingredients.forEach(ingredient => {
+                    this.emptyIngredients.push(this.pumps.filter(pump => pump.MotorPin === ingredient.PumpID)[0].Name)
+                });
+                this.modal = false;
+            },
+            fetchPumps() {
+                return fetch('http://localhost:3000/pump').then(response => response.json()).then(data => {
+                    this.pumps = data;
+                })
+            },
         }
     }
 </script>
