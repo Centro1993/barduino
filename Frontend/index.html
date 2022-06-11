@@ -205,7 +205,6 @@
 
                 this.fetchRecipeState().then(() => {
                     const canProduceRecipe = this.recipeState[this.selectedRecipe.ID];
-                    console.info('can produce recipe initial', canProduceRecipe)
                     if (canProduceRecipe) {
                         fetch(`http://localhost:3000/drink`, {
                             method: 'POST',
@@ -216,8 +215,7 @@
                                 "RecipeID": this.selectedRecipe.ID,
                             }),
                         }).then((response) => {
-                            if (response.status !== 200) {
-                                console.info('status code not 200', response.status)
+                            if (response.status !== 200 && response.status !== 201) {
                                 this.canProduceDrink = false
                             } else {
                                 this.fetchDrinkInterval = setInterval(() => {
