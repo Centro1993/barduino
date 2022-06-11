@@ -19,6 +19,7 @@
         <table>
             <tr class="pump-tr">
                 <th>Name</th>
+                <th>ID</th>
                 <th>Motorpin</th>
                 <th>Sensorpin</th>
                 <th>MlPerMinute</th>
@@ -28,6 +29,7 @@
             <template x-for="pump in pumps">
                 <tr class="pump-tr">
                     <td x-text="pump.Name"></td>
+                    <td x-text="pump.ID ?? ''"></td>
                     <td x-text="pump.MotorPin"></td>
                     <td x-text="pump.SensorPin"></td>
                     <td x-text="pump.MlPerMinute"></td>
@@ -178,7 +180,7 @@
     }
     .pump-tr {
         display: grid;
-        grid-template-columns: repeat(6, 1fr);
+        grid-template-columns: repeat(7, 1fr);
         justify-content: center;
         gap: 10px;
         text-align: center;

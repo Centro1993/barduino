@@ -220,7 +220,6 @@
                             } else {
                                 this.fetchDrinkInterval = setInterval(() => {
                                     fetch('http://localhost:3000/state/drink').then(response => response.json()).then(data => {
-                                        console.info(data)
                                         this.ingredientEmpty = data.IngredientEmpty;
                                         this.currentlyServing = data.CurrentlyServing;
                                     })
@@ -271,7 +270,7 @@
             setEmptyIngredients() {
                 this.fetchPumps();
                 this.selectedRecipe.Ingredients.forEach(ingredient => {
-                    this.emptyIngredients.push(this.pumps.filter(pump => pump.MotorPin === ingredient.PumpID)[0].Name)
+                    this.emptyIngredients.push(Object.entries(this.pumps).filter(pump => pump.MotorPin === ingredient.PumpID)[0]?.Name)
                 });
                 this.modal = false;
             },
