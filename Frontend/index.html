@@ -6,16 +6,31 @@
     <script src="\\unpkg.com/alpinejs" defer></script>
 </head>
 <body x-data="alpineData()" x-init="fetchRecipes()" x-cloak>
-    <div class="container">
-        <img class="beer-mug" src="MiniMugV2.gif" alt="Looped animation of a beer being drafted">
+<div class="container">
+    <img class="beer-mug" src="MiniMugV2.gif" alt="Looped animation of a beer being drafted">
+</div>
+<h1>BARDUINO</h1>
+<div class="recipe-selector">
+    <img @click="previousRecipe()" class="arrow--up" src="arrow_up-export.png">
+    <h2 x-text="selectedRecipe.Name">CURRENT RECIPE</h2>
+    <img @click="nextRecipe()" class="arrow--down" src="arrow_down-export.png">
+    <button class="button" @click="await createDrink()">START</button>
+</div>
+<div class="modal-overlay" x-show="modal">
+    <div class="modal">
+        <div x-show="canProduceDrink">
+            <p class="modal-headline">Drink in progress...</p>
+            <img src="beer-loading.gif" alt="Looped animation of a beer being drafted">
+            <button class="button">STOP</button>
+        </div>
+        <div x-show="!canProduceDrink && !ingredientEmpty">
+            <p class="modal-headline">Couldn't create drink</p>
+        </div>
+        <div x-show="!canProduceDrink && ingredientEmpty">
+            <p class="modal-headline">Ingredients empty</p>
+        </div>
     </div>
-    <h1>BARDUINO</h1>
-    <div class="recipe-selector">
-        <img @click="previousRecipe()" class="arrow--up" src="arrow_up-export.png">
-        <h2 x-text="selectedRecipe.Name">CURRENT RECIPE</h2>
-        <img @click="nextRecipe()" class="arrow--down" src="arrow_down-export.png">
-        <button @click="createDrink()">START</button>
-    </div>
+</div>
 </body>
 </html>
 
@@ -59,6 +74,7 @@
     h2 {
         font-size: 4rem;
         margin: 10px;
+        color: #323232;
     }
 
     .recipe-selector {
@@ -68,6 +84,66 @@
         display: grid;
         justify-items: center;
     }
+
+    .recipe-start {
+        padding: 10px 40px;
+        border: 2px solid #a06b38;
+        background: #323232;
+        margin-top: 80px;
+        font-family: 'munro', serif;
+        font-size: 2rem;
+        color: #eec39a;
+    }
+
+    .recipe-start:hover {
+        background: #a06b38;
+        color: #323232;
+    }
+
+    .button {
+        padding: 10px 40px;
+        border: 2px solid #a06b38;
+        background: #323232;
+        margin-top: 80px;
+        font-family: 'munro', serif;
+        font-size: 2rem;
+        color: #eec39a;
+    }
+
+    .button:hover {
+        background: #a06b38;
+        color: #323232;
+    }
+
+    .modal {
+        position: fixed;
+        width: 90%;
+        height: 80%;
+        background: #eec39a;
+        border: 2px solid #a06b38;
+        left: 5%;
+        top: 10%;
+        z-index: 20;
+        opacity: 1;
+        display: flex;
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .modal-overlay {
+        background: rgba(0, 0, 0, 0.5);
+        position: fixed;
+        width: 100vw;
+        height: 100vh;
+        left: 0;
+        top: 0;
+        z-index: 10;
+    }
+
+    .modal-headline {
+        font-size: 5rem;
+        color: #a06b38;
+    }
 </style>
 
 
@@ -75,7 +151,14 @@
     function alpineData() {
         return {
             component: 'pumps',
-            modal: '',
+            modal: false,
+            canProduceDrink: true,
+            recipeState: {},
+
+            ingredientEmpty: false,
+            currentlyServing: false,
+
+            fetchDrinkInterval: null,
 
             // ------------------ RECIPES ---------------------------------------------
 
@@ -95,7 +178,7 @@
             },
             nextRecipe() {
                 this.recipeIterator += 1;
-                if (this.recipeIterator > this.recipes.length -1) {
+                if (this.recipeIterator > this.recipes.length - 1) {
                     this.recipeIterator = 0;
                 }
                 this.selectedRecipe = this.recipes[this.recipeIterator];
@@ -103,20 +186,48 @@
             previousRecipe() {
                 this.recipeIterator -= 1;
                 if (this.recipeIterator < 0) {
-                    this.recipeIterator = this.recipes.length -1;
+                    this.recipeIterator = this.recipes.length - 1;
                 }
                 this.selectedRecipe = this.recipes[this.recipeIterator];
             },
-            createDrink() {
-                return fetch(`http://localhost:3000/drink`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        "RecipeID": this.selectedRecipe.ID,
-                    }),
-                }).then(() => this.fetchRecipes()).then(() => this.modal = '');
+            async createDrink() {
+                this.modal = true;
+                this.fetchRecipeState().then(() => {
+                    const canProduceRecipe = this.recipeState[this.selectedRecipe.ID];
+                    if (canProduceRecipe) {
+                        fetch(`http://localhost:3000/drink`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                "RecipeID": this.selectedRecipe.ID,
+                            }),
+                        }).then((response) => {
+                            if (response.status !== 200) {
+                                this.canProduceDrink = false
+                            } else {
+                                this.fetchDrinkInterval = setInterval(() => {
+                                    fetch('http://localhost:3000/state/drink').then(response => response.json()).then(data => {
+                                        this.ingredientEmpty = data.IngredientEmpty;
+                                        this.currentlyServing = data.CurrentlyServing;
+                                    })
+
+                                    if (this.ingredientEmpty || !this.currentlyServing) {
+                                        clearInterval(this.fetchDrinkInterval);
+                                    }
+                                }, 100);
+                            }
+                        });
+                    } else {
+                        this.canProduceDrink = false;
+                    }
+                });
+            },
+            async fetchRecipeState() {
+                return fetch('http://localhost:3000/state/recipe').then(response => response.json()).then(data => {
+                    this.recipeState = data;
+                })
             }
         }
     }
