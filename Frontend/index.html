@@ -201,6 +201,7 @@
                 this.modal = true;
                 this.ingredientEmpty = false;
                 this.currentlyServing = false;
+                this.canProduceDrink = true;
 
                 this.fetchRecipeState().then(() => {
                     const canProduceRecipe = this.recipeState[this.selectedRecipe.ID];
