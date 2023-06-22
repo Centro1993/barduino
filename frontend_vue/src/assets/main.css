@@ -1,0 +1,30 @@
+#app {
+  padding: 2rem;
+}
+
+@font-face {
+  font-family: munro;
+  src: url("Munro-2LYe.ttf");
+}
+
+:root {
+  --barduino-light-brown: #eec39a;
+  --barduino-gray: #323232;
+  --barduino-medium-brown: #a06b38;
+  --barduino-dark-brown: #673e16;
+  --barduino-off-white: #f8e6d6;
+}
+
+*,
+*::before,
+*::after {
+  font-family: 'munro', serif;
+}
+
+body {
+  background: var(--barduino-off-white);
+  font-size: 15px;
+
+  background-image: radial-gradient(var(--barduino-light-brown) 15%, var(--barduino-off-white) 15%);
+  background-size: 10px 10px;
+}
