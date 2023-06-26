@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 
 function test() {
     console.log('test');
@@ -22,7 +22,7 @@ function test() {
                 <rect x="40" y="20" width="10" height="10"/>
             </g>
         </svg>
-        <h2 class="drink-selection__drink">drink</h2>
+        <span class="drink-selection__drink" @click="$emit('start')">drink</span>
         <svg @click="test"
              class="drink-selection__navigation-down"
              width="10%"
